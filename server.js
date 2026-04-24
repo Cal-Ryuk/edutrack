@@ -1,0 +1,23 @@
+const express = require('express');
+const Database = require('better-sqlite3');
+const path = require('path');
+const app = express();
+const db = new Database('/data/school.db');
+db.exec(`
+  CREATE TABLE IF NOT EXISTS students (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, email TEXT NOT NULL, age INTEGER);
+  CREATE TABLE IF NOT EXISTS courses (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, description TEXT, credits INTEGER);
+  CREATE TABLE IF NOT EXISTS enrollments (id INTEGER PRIMARY KEY AUTOINCREMENT, student_id INTEGER, course_id INTEGER, grade TEXT, FOREIGN KEY(student_id) REFERENCES students(id), FOREIGN KEY(course_id) REFERENCES courses(id));
+`);
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.get('/api/students', (req, res) => res.json(db.prepare('SELECT * FROM students').all()));
+app.post('/api/students', (req, res) => { const { name, email, age } = req.body; const r = db.prepare('INSERT INTO students (name,email,age) VALUES (?,?,?)').run(name,email,age); res.json({ id: r.lastInsertRowid }); });
+app.delete('/api/students/:id', (req, res) => { db.prepare('DELETE FROM students WHERE id=?').run(req.params.id); res.json({ ok: true }); });
+app.get('/api/courses', (req, res) => res.json(db.prepare('SELECT * FROM courses').all()));
+app.post('/api/courses', (req, res) => { const { title, description, credits } = req.body; const r = db.prepare('INSERT INTO courses (title,description,credits) VALUES (?,?,?)').run(title,description,credits); res.json({ id: r.lastInsertRowid }); });
+app.delete('/api/courses/:id', (req, res) => { db.prepare('DELETE FROM courses WHERE id=?').run(req.params.id); res.json({ ok: true }); });
+app.get('/api/enrollments', (req, res) => res.json(db.prepare('SELECT e.id, s.name as student, c.title as course, e.grade FROM enrollments e JOIN students s ON e.student_id=s.id JOIN courses c ON e.course_id=c.id').all()));
+app.post('/api/enrollments', (req, res) => { const { student_id, course_id, grade } = req.body; const r = db.prepare('INSERT INTO enrollments (student_id,course_id,grade) VALUES (?,?,?)').run(student_id,course_id,grade); res.json({ id: r.lastInsertRowid }); });
+app.delete('/api/enrollments/:id', (req, res) => { db.prepare('DELETE FROM enrollments WHERE id=?').run(req.params.id); res.json({ ok: true }); });
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+app.listen(process.env.PORT || 3000, () => console.log('Running on port ' + (process.env.PORT || 3000)));
