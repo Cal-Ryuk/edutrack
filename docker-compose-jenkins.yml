@@ -6,6 +6,7 @@ services:
     working_dir: /app
     volumes:
       - ./:/app
+      - db-data:/data
     ports:
       - "3001:3000"
     command: sh -c "npm install && node server.js"
