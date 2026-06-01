@@ -6,7 +6,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
 
-BASE_URL = "http://edutrack-app:3000"
+BASE_URL = "http://edutrack-jenkins:3000"
 
 def get_driver():
     options = Options()
@@ -27,22 +27,18 @@ class EduTrackTests(unittest.TestCase):
     def tearDown(self):
         self.driver.quit()
 
-    # TC01 - Page loads with correct title
     def test_01_page_title(self):
         self.assertIn("EduTrack", self.driver.title)
 
-    # TC02 - Students tab is active by default
     def test_02_students_tab_active(self):
         active = self.driver.find_element(By.CSS_SELECTOR, ".tab.active")
         self.assertIn("Students", active.text)
 
-    # TC03 - Add Student form is visible
     def test_03_add_student_form_visible(self):
         self.assertTrue(self.driver.find_element(By.ID, "s-name").is_displayed())
         self.assertTrue(self.driver.find_element(By.ID, "s-email").is_displayed())
         self.assertTrue(self.driver.find_element(By.ID, "s-age").is_displayed())
 
-    # TC04 - Add a student successfully
     def test_04_add_student(self):
         self.driver.find_element(By.ID, "s-name").send_keys("Alice Khan")
         self.driver.find_element(By.ID, "s-email").send_keys("alice@test.com")
@@ -52,7 +48,6 @@ class EduTrackTests(unittest.TestCase):
         table = self.driver.find_element(By.ID, "students-table").text
         self.assertIn("Alice Khan", table)
 
-    # TC05 - Student email appears in table
     def test_05_student_email_in_table(self):
         self.driver.find_element(By.ID, "s-name").send_keys("Bob Ahmed")
         self.driver.find_element(By.ID, "s-email").send_keys("bob@test.com")
@@ -62,7 +57,6 @@ class EduTrackTests(unittest.TestCase):
         table = self.driver.find_element(By.ID, "students-table").text
         self.assertIn("bob@test.com", table)
 
-    # TC06 - Fields clear after adding student
     def test_06_fields_clear_after_add(self):
         self.driver.find_element(By.ID, "s-name").send_keys("Clear Test")
         self.driver.find_element(By.ID, "s-email").send_keys("clear@test.com")
@@ -72,14 +66,12 @@ class EduTrackTests(unittest.TestCase):
         self.assertEqual(self.driver.find_element(By.ID, "s-name").get_attribute("value"), "")
         self.assertEqual(self.driver.find_element(By.ID, "s-email").get_attribute("value"), "")
 
-    # TC07 - Switch to Courses tab
     def test_07_switch_to_courses_tab(self):
         self.driver.find_element(By.XPATH, "//div[@class='tab' and contains(text(),'Courses')]").click()
         time.sleep(0.5)
         active = self.driver.find_element(By.CSS_SELECTOR, ".tab.active")
         self.assertIn("Courses", active.text)
 
-    # TC08 - Add a course successfully
     def test_08_add_course(self):
         self.driver.find_element(By.XPATH, "//div[@class='tab' and contains(text(),'Courses')]").click()
         time.sleep(0.5)
@@ -91,7 +83,6 @@ class EduTrackTests(unittest.TestCase):
         table = self.driver.find_element(By.ID, "courses-table").text
         self.assertIn("DevOps 101", table)
 
-    # TC09 - Course credits badge shows in table
     def test_09_course_credits_in_table(self):
         self.driver.find_element(By.XPATH, "//div[@class='tab' and contains(text(),'Courses')]").click()
         time.sleep(0.5)
@@ -103,7 +94,6 @@ class EduTrackTests(unittest.TestCase):
         table = self.driver.find_element(By.ID, "courses-table").text
         self.assertIn("4 cr", table)
 
-    # TC10 - Course fields clear after adding
     def test_10_course_fields_clear(self):
         self.driver.find_element(By.XPATH, "//div[@class='tab' and contains(text(),'Courses')]").click()
         time.sleep(0.5)
@@ -114,16 +104,13 @@ class EduTrackTests(unittest.TestCase):
         time.sleep(1)
         self.assertEqual(self.driver.find_element(By.ID, "c-title").get_attribute("value"), "")
 
-    # TC11 - Switch to Enrollments tab
     def test_11_switch_to_enrollments_tab(self):
         self.driver.find_element(By.XPATH, "//div[@class='tab' and contains(text(),'Enrollments')]").click()
         time.sleep(0.5)
         active = self.driver.find_element(By.CSS_SELECTOR, ".tab.active")
         self.assertIn("Enrollments", active.text)
 
-    # TC12 - Enrollments tab loads student and course dropdowns
     def test_12_enrollment_dropdowns_populated(self):
-        # Add student and course first
         self.driver.find_element(By.ID, "s-name").send_keys("Dropdown Student")
         self.driver.find_element(By.ID, "s-email").send_keys("drop@test.com")
         self.driver.find_element(By.ID, "s-age").send_keys("23")
@@ -140,9 +127,7 @@ class EduTrackTests(unittest.TestCase):
         options = self.driver.find_element(By.ID, "e-student").find_elements(By.TAG_NAME, "option")
         self.assertGreater(len(options), 0)
 
-    # TC13 - Add enrollment successfully
     def test_13_add_enrollment(self):
-        # Seed data
         self.driver.find_element(By.ID, "s-name").send_keys("Enroll Student")
         self.driver.find_element(By.ID, "s-email").send_keys("enroll@test.com")
         self.driver.find_element(By.ID, "s-age").send_keys("24")
@@ -164,20 +149,20 @@ class EduTrackTests(unittest.TestCase):
         table = self.driver.find_element(By.ID, "enrollments-table").text
         self.assertNotIn("No enrollments yet", table)
 
-    # TC14 - Delete a student
     def test_14_delete_student(self):
         self.driver.find_element(By.ID, "s-name").send_keys("Delete Me")
         self.driver.find_element(By.ID, "s-email").send_keys("delete@test.com")
         self.driver.find_element(By.ID, "s-age").send_keys("25")
         self.driver.find_element(By.CSS_SELECTOR, "#tab-students .btn").click()
         time.sleep(1)
-        del_btn = self.driver.find_element(By.CSS_SELECTOR, "#students-table .del-btn")
+        
+        del_btn = self.driver.find_element(By.CSS_SELECTOR, "#students-table tr:last-child .del-btn")
         del_btn.click()
-        time.sleep(1)
+        
+        self.wait.until(EC.staleness_of(del_btn))
         table = self.driver.find_element(By.ID, "students-table").text
         self.assertNotIn("Delete Me", table)
 
-    # TC15 - Delete a course
     def test_15_delete_course(self):
         self.driver.find_element(By.XPATH, "//div[@class='tab' and contains(text(),'Courses')]").click()
         time.sleep(0.5)
@@ -185,9 +170,11 @@ class EduTrackTests(unittest.TestCase):
         self.driver.find_element(By.ID, "c-credits").send_keys("1")
         self.driver.find_element(By.CSS_SELECTOR, "#tab-courses .btn").click()
         time.sleep(1)
-        del_btn = self.driver.find_element(By.CSS_SELECTOR, "#courses-table .del-btn")
+        
+        del_btn = self.driver.find_element(By.CSS_SELECTOR, "#courses-table tr:last-child .del-btn")
         del_btn.click()
-        time.sleep(1)
+        
+        self.wait.until(EC.staleness_of(del_btn))
         table = self.driver.find_element(By.ID, "courses-table").text
         self.assertNotIn("Delete Course", table)
 
